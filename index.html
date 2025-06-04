@@ -26,6 +26,7 @@
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       margin-bottom: 20px;
+      background-color: white;
     }
 
     .card-container img.card-bg {
@@ -122,7 +123,7 @@
   <input type="file" id="imageInput" accept="image/*">
   <input type="text" id="nameInput" placeholder="اكتب اسمك هنا">
   <button onclick="generateGreeting()">أنشئ التهنئة</button>
-  <button onclick="downloadCard()">تحميل التهنئة</button>
+  <button onclick="downloadCard()">تحميل التهنئة بجودة عالية</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
@@ -152,7 +153,7 @@
     function makeDraggable(el) {
       let isDragging = false, offsetX, offsetY;
 
-      // دعم الفأرة
+      // الفأرة
       el.addEventListener("mousedown", function(e) {
         isDragging = true;
         offsetX = e.offsetX;
@@ -162,61 +163,4 @@
       document.addEventListener("mousemove", function(e) {
         if (isDragging) {
           const rect = cardContainer.getBoundingClientRect();
-          el.style.left = `${e.clientX - rect.left - offsetX}px`;
-          el.style.top = `${e.clientY - rect.top - offsetY}px`;
-        }
-      });
-
-      document.addEventListener("mouseup", () => isDragging = false);
-
-      // دعم اللمس للموبايل
-      el.addEventListener("touchstart", function(e) {
-        isDragging = true;
-        const touch = e.touches[0];
-        const rect = el.getBoundingClientRect();
-        offsetX = touch.clientX - rect.left;
-        offsetY = touch.clientY - rect.top;
-      });
-
-      document.addEventListener("touchmove", function(e) {
-        if (isDragging) {
-          const touch = e.touches[0];
-          const rect = cardContainer.getBoundingClientRect();
-          el.style.left = `${touch.clientX - rect.left - offsetX}px`;
-          el.style.top = `${touch.clientY - rect.top - offsetY}px`;
-        }
-      });
-
-      document.addEventListener("touchend", () => isDragging = false);
-    }
-
-    makeDraggable(userGroup);
-
-    function downloadCard() {
-      html2canvas(cardContainer, {
-        useCORS: true,
-        allowTaint: true
-      }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "eid_greeting.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-
-    function generateStars() {
-      const stars = document.getElementById("stars");
-      for (let i = 0; i < 50; i++) {
-        const star = document.createElement("div");
-        star.classList.add("star");
-        star.style.left = Math.random() * 100 + "%";
-        star.style.top = Math.random() * 100 + "%";
-        star.style.animationDelay = (Math.random() * 3) + "s";
-        stars.appendChild(star);
-      }
-    }
-
-    generateStars();
-  </script>
-</body>
-</html>
+          el
