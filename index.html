@@ -15,63 +15,53 @@
       padding: 20px;
       direction: rtl;
       min-height: 100vh;
-      overflow-y: auto;
     }
 
     .card-container {
       position: relative;
       width: 100%;
       max-width: 350px;
+      height: 500px;
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      margin-bottom: 20px;
       background-color: white;
     }
 
     .card-container img.card-bg {
       width: 100%;
-      display: block;
-      border-radius: 10px;
+      height: 100%;
+      object-fit: cover;
     }
 
     #userGroup {
       position: absolute;
-      display: none;
+      top: 150px;
+      left: 80px;
+      display: flex;
       flex-direction: column;
       align-items: center;
-      top: 120px;
-      left: 120px;
-      user-select: none;
+      cursor: grab;
       touch-action: none;
       z-index: 2;
     }
 
-    #zoomWrapper {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      overflow: hidden;
-      touch-action: none;
-      border: 3px solid white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    }
-
     #userImage {
-      width: 100%;
-      height: 100%;
+      width: 120px;
+      height: 120px;
       object-fit: cover;
-      object-position: center;
-      touch-action: none;
-      cursor: grab;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
     }
 
     #userName {
       margin-top: 8px;
       font-size: 20px;
       font-weight: bold;
-      text-shadow: 1px 1px 2px white;
       color: #222;
+      background-color: rgba(255,255,255,0.7);
+      padding: 4px 10px;
+      border-radius: 6px;
     }
 
     input, button {
@@ -101,10 +91,8 @@
 <body>
   <div class="card-container" id="cardContainer">
     <img class="card-bg" src="eidy.png" alt="خلفية العيد">
-    <div id="userGroup">
-      <div id="zoomWrapper">
-        <img id="userImage" src="">
-      </div>
+    <div id="userGroup" style="display: none;">
+      <img id="userImage" src="" />
       <div id="userName">اسمك هنا</div>
     </div>
   </div>
@@ -112,7 +100,7 @@
   <input type="file" id="imageInput" accept="image/*">
   <input type="text" id="nameInput" placeholder="اكتب اسمك هنا">
   <button onclick="generateGreeting()">أنشئ التهنئة</button>
-  <button onclick="downloadCard()">تحميل التهنئة بجودة عالية</button>
+  <button onclick="downloadCard()">تحميل التهنئة</button>
 
   <script src="https://unpkg.com/@panzoom/panzoom/dist/panzoom.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -135,21 +123,32 @@
     });
 
     function generateGreeting() {
-      const name = document.getElementById("nameInput").value;
+      const name = document.getElementById("nameInput").value.trim();
       userName.textContent = name || "اسمك هنا";
       userGroup.style.display = "flex";
     }
 
-    // 1. Panzoom for image zoom inside the circle
-    const zoomWrapper = document.getElementById("zoomWrapper");
-    const panzoom = Panzoom(userImage, {
+    // تفعيل panzoom على المجموعة كلها (الصورة + الاسم)
+    const panzoomInstance = Panzoom(userGroup, {
       maxScale: 3,
-      minScale: 1,
-      contain: 'outside'
+      minScale: 0.5,
+      contain: 'outside',
     });
-    zoomWrapper.addEventListener("wheel", panzoom.zoomWithWheel);
 
-    // 2. Make userGroup draggable on screen
-    let isDragging = false, startX, startY, initialX, initialY;
+    cardContainer.addEventListener("wheel", panzoomInstance.zoomWithWheel);
 
-    userGroup.addEventListener('touchstart', (e) =>
+    // حفظ البطاقة كصورة
+    function downloadCard() {
+      html2canvas(cardContainer, {
+        useCORS: true,
+        scale: 3
+      }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "eid-greeting.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
