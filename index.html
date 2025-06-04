@@ -43,6 +43,7 @@
       left: 120px;
       cursor: move;
       user-select: none;
+      touch-action: none;
     }
 
     #userImage {
@@ -150,38 +151,56 @@
 
     function makeDraggable(el) {
       let isDragging = false, offsetX, offsetY;
+
+      // دعم الفأرة
       el.addEventListener("mousedown", function(e) {
         isDragging = true;
         offsetX = e.offsetX;
         offsetY = e.offsetY;
       });
+
       document.addEventListener("mousemove", function(e) {
         if (isDragging) {
           const rect = cardContainer.getBoundingClientRect();
-          let x = e.clientX - rect.left - offsetX;
-          let y = e.clientY - rect.top - offsetY;
-          el.style.left = `${x}px`;
-          el.style.top = `${y}px`;
+          el.style.left = `${e.clientX - rect.left - offsetX}px`;
+          el.style.top = `${e.clientY - rect.top - offsetY}px`;
         }
       });
-      document.addEventListener("mouseup", function() {
-        isDragging = false;
+
+      document.addEventListener("mouseup", () => isDragging = false);
+
+      // دعم اللمس للموبايل
+      el.addEventListener("touchstart", function(e) {
+        isDragging = true;
+        const touch = e.touches[0];
+        const rect = el.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
       });
+
+      document.addEventListener("touchmove", function(e) {
+        if (isDragging) {
+          const touch = e.touches[0];
+          const rect = cardContainer.getBoundingClientRect();
+          el.style.left = `${touch.clientX - rect.left - offsetX}px`;
+          el.style.top = `${touch.clientY - rect.top - offsetY}px`;
+        }
+      });
+
+      document.addEventListener("touchend", () => isDragging = false);
     }
 
     makeDraggable(userGroup);
 
     function downloadCard() {
-      // تجنب خطأ التصدير مع صورة محلية
-      const originalSrc = userImage.src;
-      userImage.src = ""; // مؤقتًا إزالة الصورة
-
-      html2canvas(cardContainer).then(canvas => {
+      html2canvas(cardContainer, {
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
         const link = document.createElement("a");
         link.download = "eid_greeting.png";
-        link.href = canvas.toDataURL();
+        link.href = canvas.toDataURL("image/png");
         link.click();
-        userImage.src = originalSrc; // استرجاع الصورة بعد التصدير
       });
     }
 
@@ -196,6 +215,7 @@
         stars.appendChild(star);
       }
     }
+
     generateStars();
   </script>
 </body>
