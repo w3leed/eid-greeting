@@ -44,6 +44,8 @@
       left: 120px;
       cursor: move;
       user-select: none;
+      transform-origin: center center;
+      touch-action: none;
     }
 
     #userImage {
@@ -150,8 +152,10 @@
       userGroup.style.display = "flex";
     }
 
-    function makeDraggable(el) {
-      let isDragging = false, offsetX, offsetY;
+    // سحب بالفأرة
+    function makeDraggableZoomable(el) {
+      let isDragging = false, offsetX = 0, offsetY = 0;
+      let scale = 1, lastDistance = null;
 
       el.addEventListener("mousedown", function(e) {
         isDragging = true;
@@ -168,19 +172,56 @@
       });
 
       document.addEventListener("mouseup", () => isDragging = false);
+
+      // لمس وتحريك وتكبير
+      el.addEventListener("touchstart", function(e) {
+        if (e.touches.length === 2) {
+          lastDistance = getDistance(e.touches[0], e.touches[1]);
+        } else if (e.touches.length === 1) {
+          offsetX = e.touches[0].clientX - el.getBoundingClientRect().left;
+          offsetY = e.touches[0].clientY - el.getBoundingClientRect().top;
+        }
+      });
+
+      el.addEventListener("touchmove", function(e) {
+        e.preventDefault();
+        const rect = cardContainer.getBoundingClientRect();
+
+        if (e.touches.length === 2) {
+          const newDistance = getDistance(e.touches[0], e.touches[1]);
+          if (lastDistance) {
+            let newScale = scale * (newDistance / lastDistance);
+            newScale = Math.max(0.5, Math.min(newScale, 3));
+            el.style.transform = `scale(${newScale})`;
+          }
+        } else if (e.touches.length === 1) {
+          const x = e.touches[0].clientX - rect.left - offsetX;
+          const y = e.touches[0].clientY - rect.top - offsetY;
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+        }
+      });
+
+      el.addEventListener("touchend", function(e) {
+        if (e.touches.length < 2) {
+          scale = parseFloat(el.style.transform.replace("scale(", "").replace(")", "")) || 1;
+          lastDistance = null;
+        }
+      });
+
+      function getDistance(t1, t2) {
+        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      }
     }
 
-    makeDraggable(userGroup);
+    makeDraggableZoomable(userGroup);
 
     function downloadCard() {
-      userGroup.style.display = "flex";
-
       html2canvas(cardContainer, {
-        scale: 4, // دقة عالية
+        scale: 4,
         useCORS: true,
         backgroundColor: null,
-        allowTaint: true,
-        imageTimeout: 0
+        allowTaint: true
       }).then(canvas => {
         const link = document.createElement("a");
         link.download = "eid_greeting.png";
