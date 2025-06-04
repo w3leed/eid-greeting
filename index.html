@@ -42,9 +42,9 @@
       align-items: center;
       top: 120px;
       left: 120px;
-      cursor: move;
       user-select: none;
       touch-action: none;
+      z-index: 2;
     }
 
     #zoomWrapper {
@@ -53,6 +53,8 @@
       border-radius: 50%;
       overflow: hidden;
       touch-action: none;
+      border: 3px solid white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
 
     #userImage {
@@ -60,9 +62,8 @@
       height: 100%;
       object-fit: cover;
       object-position: center;
-      border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      touch-action: none;
+      cursor: grab;
     }
 
     #userName {
@@ -95,32 +96,9 @@
     button:hover {
       background-color: #c8235d;
     }
-
-    .stars {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .star {
-      width: 10px; height: 10px;
-      background: gold;
-      position: absolute;
-      border-radius: 50%;
-      animation: twinkle 3s infinite ease-in-out;
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.5); }
-    }
   </style>
 </head>
 <body>
-  <div class="stars" id="stars"></div>
-
   <div class="card-container" id="cardContainer">
     <img class="card-bg" src="eidy.png" alt="خلفية العيد">
     <div id="userGroup">
@@ -162,27 +140,16 @@
       userGroup.style.display = "flex";
     }
 
-    // Panzoom for zooming and pinch support
+    // 1. Panzoom for image zoom inside the circle
     const zoomWrapper = document.getElementById("zoomWrapper");
-    const panzoom = Panzoom(zoomWrapper, {
+    const panzoom = Panzoom(userImage, {
       maxScale: 3,
       minScale: 1,
       contain: 'outside'
     });
-    zoomWrapper.parentElement.addEventListener("wheel", panzoom.zoomWithWheel);
+    zoomWrapper.addEventListener("wheel", panzoom.zoomWithWheel);
 
-    // Download card
-    function downloadCard() {
-      html2canvas(cardContainer, {
-        useCORS: true,
-        scale: 3
-      }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "eid-greeting.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-  </script>
-</body>
-</html>
+    // 2. Make userGroup draggable on screen
+    let isDragging = false, startX, startY, initialX, initialY;
+
+    userGroup.addEventListener('touchstart', (e) =>
