@@ -2,10 +2,9 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>بطاقة تهنئة بالعيد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
-  <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -16,54 +15,44 @@
       padding: 20px;
       direction: rtl;
       min-height: 100vh;
-      overflow-y: auto;
     }
-
     .card-container {
       position: relative;
-      width: 100%;
       max-width: 350px;
+      width: 100%;
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       background-color: white;
     }
-
     .card-container img.card-bg {
       width: 100%;
       display: block;
-      border-radius: 10px;
     }
-
     #userGroup {
       position: absolute;
       display: none;
       flex-direction: column;
       align-items: center;
-      cursor: move;
-      user-select: none;
+      top: 120px;
+      left: 100px;
       touch-action: none;
-      z-index: 2;
     }
-
     #userImage {
       width: 100px;
       height: 100px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-
     #userName {
       margin-top: 8px;
       font-size: 20px;
       font-weight: bold;
-      text-shadow: 1px 1px 2px white;
       color: #222;
+      text-shadow: 1px 1px 2px white;
     }
-
     input, button {
       margin: 10px 5px;
       padding: 10px;
@@ -71,207 +60,138 @@
       font-size: 16px;
       border: none;
     }
-
     input[type="text"] {
       width: 250px;
       border: 1px solid #ccc;
     }
-
     button {
       background-color: #d6336c;
       color: white;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #c8235d;
     }
-
-    .stars {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .star {
-      width: 10px; height: 10px;
-      background: gold;
-      position: absolute;
-      border-radius: 50%;
-      animation: twinkle 3s infinite ease-in-out;
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.5); }
-    }
-
-    #cropModal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
+    #cropperModal {
       display: none;
-      align-items: center;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
       justify-content: center;
-      z-index: 999;
+      align-items: center;
+      z-index: 1000;
     }
-
-    #cropContainer {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
+    #cropperModal img {
       max-width: 90%;
-      max-height: 90%;
-    }
-
-    #cropImage {
-      max-width: 100%;
-      max-height: 60vh;
-    }
-
-    #cropButtons {
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    #cropButtons button {
-      margin: 0 10px;
+      max-height: 80%;
     }
   </style>
+  <link  href="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet">
 </head>
 <body>
-  <div class="stars" id="stars"></div>
 
-  <div class="card-container" id="cardContainer">
-    <img class="card-bg" src="eidy.png" alt="خلفية العيد">
-    <div id="userGroup">
-      <img id="userImage" src="">
-      <div id="userName">اسمك هنا</div>
-    </div>
+<div class="card-container" id="cardContainer">
+  <img class="card-bg" src="eidy.png" alt="خلفية العيد">
+  <div id="userGroup">
+    <img id="userImage" src="">
+    <div id="userName">اسمك هنا</div>
   </div>
+</div>
 
-  <input type="file" id="imageInput" accept="image/*">
-  <input type="text" id="nameInput" placeholder="اكتب اسمك هنا">
-  <button onclick="generateGreeting()">أنشئ التهنئة</button>
-  <button onclick="downloadCard()">تحميل التهنئة</button>
+<input type="file" id="imageInput" accept="image/*">
+<input type="text" id="nameInput" placeholder="اكتب اسمك هنا">
+<button onclick="generateGreeting()">أنشئ التهنئة</button>
+<button onclick="downloadCard()">تحميل التهنئة</button>
 
-  <!-- كروب للصورة -->
-  <div id="cropModal">
-    <div id="cropContainer">
-      <img id="cropImage" src="">
-      <div id="cropButtons">
-        <button onclick="cropAndSet()">تأكيد القص</button>
-        <button onclick="cancelCrop()">إلغاء</button>
-      </div>
-    </div>
+<!-- كروب الصورة -->
+<div id="cropperModal">
+  <div>
+    <img id="cropperImage" />
+    <br>
+    <button onclick="applyCrop()">تأكيد القص</button>
   </div>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://unpkg.com/cropperjs"></script>
-  <script>
-    const userGroup = document.getElementById("userGroup");
-    const userImage = document.getElementById("userImage");
-    const userName = document.getElementById("userName");
-    const cardContainer = document.getElementById("cardContainer");
-    const cropModal = document.getElementById("cropModal");
-    const cropImage = document.getElementById("cropImage");
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  const userGroup = document.getElementById("userGroup");
+  const userImage = document.getElementById("userImage");
+  const userName = document.getElementById("userName");
+  const cropperModal = document.getElementById("cropperModal");
+  const cropperImage = document.getElementById("cropperImage");
+  let cropper = null;
 
-    let cropper;
+  document.getElementById("imageInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        cropperImage.src = evt.target.result;
+        cropperModal.style.display = "flex";
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropperImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          background: false
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-    document.getElementById("imageInput").addEventListener("change", function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          cropImage.src = evt.target.result;
-          cropModal.style.display = "flex";
-          cropper = new Cropper(cropImage, {
-            aspectRatio: 1,
-            viewMode: 1,
-            dragMode: "move"
-          });
-        };
-        reader.readAsDataURL(file);
+  function applyCrop() {
+    const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
+    userImage.src = canvas.toDataURL();
+    cropperModal.style.display = "none";
+    userGroup.style.display = "flex";
+  }
+
+  function generateGreeting() {
+    const name = document.getElementById("nameInput").value;
+    userName.textContent = name || "اسمك هنا";
+    userGroup.style.display = "flex";
+  }
+
+  interact("#userGroup")
+    .draggable({
+      listeners: {
+        move (event) {
+          const target = event.target;
+          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+          target.style.transform = `translate(${x}px, ${y}px) scale(${target.getAttribute('data-scale') || 1})`;
+          target.setAttribute('data-x', x);
+          target.setAttribute('data-y', y);
+        }
+      }
+    })
+    .gesturable({
+      listeners: {
+        move (event) {
+          const target = event.target;
+          let scale = parseFloat(target.getAttribute('data-scale')) || 1;
+          scale *= (1 + event.ds);
+          target.style.transform = `translate(${target.getAttribute('data-x') || 0}px, ${target.getAttribute('data-y') || 0}px) scale(${scale})`;
+          target.setAttribute('data-scale', scale);
+        }
       }
     });
 
-    function cropAndSet() {
-      const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-      userImage.src = canvas.toDataURL("image/png");
-      userGroup.style.display = "flex";
-      userGroup.style.left = "50%";
-      userGroup.style.top = "50%";
-      userGroup.style.transform = "translate(-50%, -50%)";
-      cropper.destroy();
-      cropModal.style.display = "none";
-    }
+  function downloadCard() {
+    html2canvas(document.getElementById("cardContainer"), {
+      useCORS: true,
+      scale: 3
+    }).then(canvas => {
+      const link = document.createElement("a");
+      link.download = "eid_greeting.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  }
+</script>
 
-    function cancelCrop() {
-      cropper.destroy();
-      cropModal.style.display = "none";
-    }
-
-    function generateGreeting() {
-      const name = document.getElementById("nameInput").value;
-      userName.textContent = name || "اسمك هنا";
-      userGroup.style.display = "flex";
-    }
-
-    function makeDraggable(el) {
-      let isDragging = false, offsetX, offsetY;
-
-      el.addEventListener("mousedown", function(e) {
-        isDragging = true;
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
-      });
-
-      document.addEventListener("mousemove", function(e) {
-        if (isDragging) {
-          const rect = cardContainer.getBoundingClientRect();
-          let x = e.clientX - rect.left - offsetX;
-          let y = e.clientY - rect.top - offsetY;
-          el.style.left = `${x}px`;
-          el.style.top = `${y}px`;
-          el.style.transform = "none";
-        }
-      });
-
-      document.addEventListener("mouseup", () => isDragging = false);
-    }
-
-    makeDraggable(userGroup);
-
-    function downloadCard() {
-      html2canvas(cardContainer, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        backgroundColor: null
-      }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "eid_greeting.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-
-    function generateStars() {
-      const stars = document.getElementById("stars");
-      for (let i = 0; i < 50; i++) {
-        const star = document.createElement("div");
-        star.classList.add("star");
-        star.style.left = Math.random() * 100 + "%";
-        star.style.top = Math.random() * 100 + "%";
-        star.style.animationDelay = (Math.random() * 3) + "s";
-        stars.appendChild(star);
-      }
-    }
-
-    generateStars();
-  </script>
 </body>
 </html>
