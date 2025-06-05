@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>بطاقة تهنئة بالعيد</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -16,6 +16,7 @@
       padding: 20px;
       direction: rtl;
       min-height: 100vh;
+      overflow-y: auto;
     }
 
     .card-container {
@@ -32,6 +33,7 @@
     .card-container img.card-bg {
       width: 100%;
       display: block;
+      border-radius: 10px;
     }
 
     #userGroup {
@@ -39,13 +41,15 @@
       display: none;
       flex-direction: column;
       align-items: center;
-      cursor: grab;
+      cursor: move;
+      user-select: none;
       touch-action: none;
+      z-index: 2;
     }
 
     #userImage {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid white;
@@ -83,47 +87,6 @@
       background-color: #c8235d;
     }
 
-    #cropModal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.7);
-      z-index: 999;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #cropImageBox {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 90vw;
-      max-height: 90vh;
-    }
-
-    #cropImageBox img {
-      max-width: 100%;
-      max-height: 60vh;
-    }
-
-    #cropImageBox button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      background-color: #d6336c;
-      color: white;
-      cursor: pointer;
-    }
-
-    #cropImageBox button:nth-child(2) {
-      background-color: gray;
-    }
-
     .stars {
       position: fixed;
       top: 0; left: 0;
@@ -144,6 +107,39 @@
       0%, 100% { opacity: 0.2; transform: scale(1); }
       50% { opacity: 1; transform: scale(1.5); }
     }
+
+    #cropModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #cropContainer {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    #cropImage {
+      max-width: 100%;
+      max-height: 60vh;
+    }
+
+    #cropButtons {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    #cropButtons button {
+      margin: 0 10px;
+    }
   </style>
 </head>
 <body>
@@ -162,42 +158,40 @@
   <button onclick="generateGreeting()">أنشئ التهنئة</button>
   <button onclick="downloadCard()">تحميل التهنئة</button>
 
-  <!-- Crop Modal -->
+  <!-- كروب للصورة -->
   <div id="cropModal">
-    <div id="cropImageBox">
-      <img id="cropTarget" src="">
-      <div style="margin-top: 10px;">
-        <button onclick="cropAndSet()">قص الصورة</button>
+    <div id="cropContainer">
+      <img id="cropImage" src="">
+      <div id="cropButtons">
+        <button onclick="cropAndSet()">تأكيد القص</button>
         <button onclick="cancelCrop()">إلغاء</button>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/cropperjs"></script>
   <script>
     const userGroup = document.getElementById("userGroup");
     const userImage = document.getElementById("userImage");
     const userName = document.getElementById("userName");
     const cardContainer = document.getElementById("cardContainer");
     const cropModal = document.getElementById("cropModal");
-    const cropTarget = document.getElementById("cropTarget");
-    const imageInput = document.getElementById("imageInput");
+    const cropImage = document.getElementById("cropImage");
+
     let cropper;
 
-    // Image crop setup
-    imageInput.addEventListener("change", function(e) {
+    document.getElementById("imageInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          cropTarget.src = evt.target.result;
+          cropImage.src = evt.target.result;
           cropModal.style.display = "flex";
-          if (cropper) cropper.destroy();
-          cropper = new Cropper(cropTarget, {
+          cropper = new Cropper(cropImage, {
             aspectRatio: 1,
             viewMode: 1,
-            background: false
+            dragMode: "move"
           });
         };
         reader.readAsDataURL(file);
@@ -208,14 +202,16 @@
       const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
       userImage.src = canvas.toDataURL("image/png");
       userGroup.style.display = "flex";
+      userGroup.style.left = "50%";
+      userGroup.style.top = "50%";
+      userGroup.style.transform = "translate(-50%, -50%)";
       cropper.destroy();
       cropModal.style.display = "none";
     }
 
     function cancelCrop() {
-      if (cropper) cropper.destroy();
+      cropper.destroy();
       cropModal.style.display = "none";
-      imageInput.value = '';
     }
 
     function generateGreeting() {
@@ -224,61 +220,41 @@
       userGroup.style.display = "flex";
     }
 
-    // Move and scale group
-    let isDragging = false, offsetX, offsetY, scale = 1;
+    function makeDraggable(el) {
+      let isDragging = false, offsetX, offsetY;
 
-    userGroup.addEventListener("mousedown", e => {
-      isDragging = true;
-      offsetX = e.offsetX;
-      offsetY = e.offsetY;
-    });
-
-    document.addEventListener("mousemove", e => {
-      if (isDragging) {
-        const rect = cardContainer.getBoundingClientRect();
-        userGroup.style.left = `${e.clientX - rect.left - offsetX}px`;
-        userGroup.style.top = `${e.clientY - rect.top - offsetY}px`;
-      }
-    });
-
-    document.addEventListener("mouseup", () => isDragging = false);
-
-    // Touch move
-    userGroup.addEventListener("touchstart", e => {
-      if (e.touches.length === 1) {
+      el.addEventListener("mousedown", function(e) {
         isDragging = true;
-        const rect = userGroup.getBoundingClientRect();
-        offsetX = e.touches[0].clientX - rect.left;
-        offsetY = e.touches[0].clientY - rect.top;
-      }
-    });
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+      });
 
-    document.addEventListener("touchmove", e => {
-      if (isDragging && e.touches.length === 1) {
-        const rect = cardContainer.getBoundingClientRect();
-        const touch = e.touches[0];
-        userGroup.style.left = `${touch.clientX - rect.left - offsetX}px`;
-        userGroup.style.top = `${touch.clientY - rect.top - offsetY}px`;
-      } else if (e.touches.length === 2) {
-        const dist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        scale = Math.min(2.5, Math.max(0.5, dist / 200));
-        userGroup.style.transform = `scale(${scale})`;
-      }
-    });
+      document.addEventListener("mousemove", function(e) {
+        if (isDragging) {
+          const rect = cardContainer.getBoundingClientRect();
+          let x = e.clientX - rect.left - offsetX;
+          let y = e.clientY - rect.top - offsetY;
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+          el.style.transform = "none";
+        }
+      });
 
-    document.addEventListener("touchend", () => isDragging = false);
+      document.addEventListener("mouseup", () => isDragging = false);
+    }
+
+    makeDraggable(userGroup);
 
     function downloadCard() {
       html2canvas(cardContainer, {
-        scale: 3,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: null
       }).then(canvas => {
         const link = document.createElement("a");
         link.download = "eid_greeting.png";
-        link.href = canvas.toDataURL();
+        link.href = canvas.toDataURL("image/png");
         link.click();
       });
     }
