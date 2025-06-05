@@ -2,40 +2,47 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>بطاقة تهنئة بالعيد</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f3d2;
-      margin: 20px;
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(to bottom, #fefcea, #f1da36);
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
       direction: rtl;
+      min-height: 100vh;
+      overflow-y: auto;
     }
-    .card {
+
+    .card-container {
       position: relative;
-      width: 350px;
-      height: 450px;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      width: 400px;
+      height: 600px;
       background: url('eidy.png') no-repeat center center;
-      background-size: contain; /* تحفظ جودة وتناسب الصورة */
-      user-select: none;
+      background-size: contain;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+      overflow: hidden;
     }
+
     #userGroup {
       position: absolute;
       top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
-      cursor: grab;
+      touch-action: none;
       user-select: none;
+      cursor: move;
     }
+
     #userImage {
       width: 110px;
       height: 110px;
@@ -43,186 +50,121 @@
       object-fit: cover;
       border: 4px solid white;
       box-shadow: 0 0 12px rgba(0,0,0,0.4);
-      touch-action: none;
-      user-select: none;
       transition: transform 0.1s ease;
     }
+
     #userName {
-      margin-top: 10px;
-      font-size: 22px;
+      margin-top: 8px;
+      font-size: 20px;
       font-weight: bold;
       color: #222;
-      text-shadow: 1px 1px 3px white;
-      cursor: grab;
-      user-select: none;
+      text-shadow: 1px 1px 2px white;
     }
+
+    .controls {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     input, button {
-      margin: 10px 0;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
-      width: 350px;
       border-radius: 8px;
       border: 1px solid #ccc;
       box-sizing: border-box;
+      width: 100%;
     }
+
     button {
       background-color: #d6336c;
       color: white;
       border: none;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
+
     button:hover {
-      background-color: #b02a58;
+      background-color: #c8235d;
     }
   </style>
 </head>
 <body>
 
-  <div class="card" id="card">
-    <div id="userGroup" style="display:none;">
-      <img id="userImage" src="" alt="صورتك" />
+  <div class="card-container" id="cardContainer">
+    <div id="userGroup">
+      <img id="userImage" src="" />
       <div id="userName">اسمك هنا</div>
     </div>
   </div>
 
-  <input type="file" id="imgInput" accept="image/*" />
-  <input type="text" id="nameInput" placeholder="اكتب اسمك هنا" />
-  <button id="createBtn">أنشئ التهنئة</button>
-  <button id="downloadBtn">تحميل التهنئة</button>
+  <div class="controls">
+    <input type="file" id="imageInput" accept="image/*">
+    <input type="text" id="nameInput" placeholder="اكتب اسمك هنا">
+    <button onclick="generateGreeting()">أنشئ التهنئة</button>
+    <button onclick="downloadCard()">تحميل التهنئة</button>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
-    const userGroup = document.getElementById('userGroup');
-    const userImage = document.getElementById('userImage');
-    const userName = document.getElementById('userName');
-    const imgInput = document.getElementById('imgInput');
-    const nameInput = document.getElementById('nameInput');
-    const createBtn = document.getElementById('createBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const card = document.getElementById('card');
+    const userImage = document.getElementById("userImage");
+    const userName = document.getElementById("userName");
+    const userGroup = document.getElementById("userGroup");
+    const cardContainer = document.getElementById("cardContainer");
 
-    // تحميل صورة المستخدم فقط
-    imgInput.addEventListener('change', (e) => {
+    document.getElementById("imageInput").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(ev) {
+        userImage.onload = () => {
+          userGroup.style.display = "flex";
+          userGroup.style.left = "50%";
+          userGroup.style.top = "35%";
+          userGroup.style.transform = "translate(-50%, -50%)";
+          userImage.style.transform = "scale(1)";
+        };
         userImage.src = ev.target.result;
-        userGroup.style.display = 'flex';
-        // إعادة تعيين المكان والسكيل الافتراضي
-        userGroup.style.left = '50%';
-        userGroup.style.top = '35%';
-        userGroup.style.transform = 'translate(-50%, -50%)';
-        userImage.style.transform = 'scale(1)';
       };
       reader.readAsDataURL(file);
     });
 
-    createBtn.addEventListener('click', () => {
-      userName.textContent = nameInput.value.trim() || 'اسمك هنا';
-      if (userImage.src) userGroup.style.display = 'flex';
-    });
-
-    // سحب وتحريك المجموعة كلها (الصورة والاسم)
-    let drag = {active:false, x:0, y:0, startX:0, startY:0};
-
-    userGroup.addEventListener('mousedown', dragStart);
-    userGroup.addEventListener('touchstart', dragStart, {passive:false});
-
-    function dragStart(e) {
-      e.preventDefault();
-      drag.active = true;
-      drag.startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-      drag.startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-      const rect = userGroup.getBoundingClientRect();
-      drag.x = rect.left;
-      drag.y = rect.top;
-
-      window.addEventListener('mousemove', dragMove);
-      window.addEventListener('touchmove', dragMove, {passive:false});
-      window.addEventListener('mouseup', dragEnd);
-      window.addEventListener('touchend', dragEnd);
+    function generateGreeting() {
+      const name = document.getElementById("nameInput").value;
+      userName.textContent = name || "اسمك هنا";
+      userGroup.style.display = "flex";
     }
 
-    function dragMove(e) {
-      if (!drag.active) return;
-      e.preventDefault();
-      const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-      const dx = currentX - drag.startX;
-      const dy = currentY - drag.startY;
-
-      userGroup.style.position = 'absolute';
-      userGroup.style.left = (drag.x + dx) + 'px';
-      userGroup.style.top = (drag.y + dy) + 'px';
-      userGroup.style.transform = 'translate(0, 0)';
-    }
-
-    function dragEnd() {
-      drag.active = false;
-      window.removeEventListener('mousemove', dragMove);
-      window.removeEventListener('touchmove', dragMove);
-      window.removeEventListener('mouseup', dragEnd);
-      window.removeEventListener('touchend', dragEnd);
-    }
-
-    // تكبير وتصغير الصورة باستخدام عجلة الماوس (mouse wheel) أو باللمس (pinch)
-    userImage.addEventListener('wheel', e => {
-      e.preventDefault();
-      let style = window.getComputedStyle(userImage);
-      let matrix = new DOMMatrixReadOnly(style.transform);
-      let scale = matrix.a || 1;
-      scale += e.deltaY * -0.001;
-      scale = Math.min(Math.max(0.5, scale), 3);
-      userImage.style.transform = `scale(${scale})`;
+    // حركة وتحريك
+    let isDragging = false, offsetX = 0, offsetY = 0;
+    userGroup.addEventListener("mousedown", function(e) {
+      isDragging = true;
+      offsetX = e.offsetX;
+      offsetY = e.offsetY;
     });
-
-    // دعم اللمس لتكبير/تصغير
-    let initialDistance = null;
-    let initialScale = 1;
-
-    userGroup.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        initialDistance = Math.hypot(dx, dy);
-        const style = window.getComputedStyle(userImage);
-        const matrix = new DOMMatrixReadOnly(style.transform);
-        initialScale = matrix.a || 1;
-      }
-    }, {passive:false});
-
-    userGroup.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2 && initialDistance) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const currentDistance = Math.hypot(dx, dy);
-        let scale = (currentDistance / initialDistance) * initialScale;
-        scale = Math.min(Math.max(0.5, scale), 3);
-        userImage.style.transform = `scale(${scale})`;
-      }
-    }, {passive:false});
-
-    userGroup.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) {
-        initialDistance = null;
+    document.addEventListener("mousemove", function(e) {
+      if (isDragging) {
+        const rect = cardContainer.getBoundingClientRect();
+        let x = e.clientX - rect.left - offsetX;
+        let y = e.clientY - rect.top - offsetY;
+        userGroup.style.left = `${x}px`;
+        userGroup.style.top = `${y}px`;
+        userGroup.style.transform = `translate(0, 0)`;
       }
     });
+    document.addEventListener("mouseup", () => isDragging = false);
 
-    // تحميل الصورة النهائية
-    downloadBtn.addEventListener('click', () => {
-      html2canvas(card, {scale: 3, useCORS:true}).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'تهنئة_العيد.png';
-        link.href = canvas.toDataURL('image/png');
+    // تحميل الكارد
+    function downloadCard() {
+      html2canvas(cardContainer).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "eid_greeting.png";
+        link.href = canvas.toDataURL();
         link.click();
       });
-    });
+    }
   </script>
+
 </body>
 </html>
