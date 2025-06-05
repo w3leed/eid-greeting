@@ -2,8 +2,8 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>بطاقة تهنئة بالعيد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>بطاقة تهنئة بالعيد مع تحكم التكبير</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -29,19 +29,20 @@
       margin-bottom: 20px;
       position: relative;
       background: #fff;
+      touch-action: none; /* مهم لتعطيل الscroll الافتراضي */
     }
 
     .card-bg-img {
       width: 100%;
       height: 100%;
-      object-fit: contain; /* تظهر الصورة كاملة بدون قص */
+      object-fit: contain;
       position: absolute;
       top: 0; left: 0;
       border-radius: 12px;
       z-index: 0;
       background: #fff;
       user-select: none;
-      pointer-events: none; /* منع تفاعل المستخدم مع الخلفية */
+      pointer-events: none;
     }
 
     #userGroup {
@@ -51,11 +52,11 @@
       align-items: center;
       top: 150px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) scale(1);
       cursor: grab;
       user-select: none;
       z-index: 10;
-      touch-action: none; /* ضروري لتحكم اللمس */
+      touch-action: none; /* مهم للتعامل مع gesture */
     }
 
     #userGroup:active {
@@ -71,6 +72,7 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
       background: #eee;
       user-select: none;
+      pointer-events: none;
     }
 
     #userName {
@@ -83,6 +85,7 @@
       max-width: 140px;
       text-align: center;
       word-wrap: break-word;
+      pointer-events: none;
     }
 
     input, button {
@@ -112,33 +115,9 @@
     button:hover {
       background-color: #c8235d;
     }
-
-    /* نجوم متلألئة في الخلفية */
-    .stars {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .star {
-      width: 10px; height: 10px;
-      background: gold;
-      position: absolute;
-      border-radius: 50%;
-      animation: twinkle 3s infinite ease-in-out;
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.5); }
-    }
   </style>
 </head>
 <body>
-  <div class="stars" id="stars"></div>
-
   <div class="card-container" id="cardContainer">
     <img class="card-bg-img" src="eidy.png" alt="خلفية العيد" draggable="false" />
     
@@ -160,6 +139,7 @@
     const userName = document.getElementById("userName");
     const cardContainer = document.getElementById("cardContainer");
 
+    // رفع الصورة
     document.getElementById("imageInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -167,80 +147,26 @@
         reader.onload = function(evt) {
           userImage.src = evt.target.result;
           userGroup.style.display = "flex";
-          // إعادة تموضع الصورة للنقطة الوسطى بعد الرفع
+          // إعادة تموضع وسط الكارد
           userGroup.style.top = "150px";
           userGroup.style.left = "50%";
-          userGroup.style.transform = "translateX(-50%)";
+          userGroup.style.transform = "translateX(-50%) scale(1)";
+          currentScale = 1;
+          currentX = null;
+          currentY = null;
         };
         reader.readAsDataURL(file);
       }
     });
 
+    // تعيين الاسم
     function generateGreeting() {
       const name = document.getElementById("nameInput").value.trim();
       userName.textContent = name || "اسمك هنا";
       userGroup.style.display = "flex";
     }
 
-    // تحريك مجموعة المستخدم (الصورة والاسم) بالماوس واللمس
-    function makeDraggable(el) {
-      let pos = { x: 0, y: 0, left: 0, top: 0 };
-      let dragging = false;
-
-      function onPointerDown(e) {
-        dragging = true;
-        pos.left = el.offsetLeft;
-        pos.top = el.offsetTop;
-        pos.x = e.clientX || e.touches[0].clientX;
-        pos.y = e.clientY || e.touches[0].clientY;
-        el.style.cursor = "grabbing";
-        e.preventDefault();
-      }
-
-      function onPointerMove(e) {
-        if (!dragging) return;
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        if (clientX === undefined || clientY === undefined) return;
-
-        const dx = clientX - pos.x;
-        const dy = clientY - pos.y;
-
-        let newLeft = pos.left + dx;
-        let newTop = pos.top + dy;
-
-        // حدود حركة داخل الكارد
-        const containerRect = cardContainer.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-
-        // يمنع خروج العنصر خارج الكارد (يمكن تعديلها حسب رغبتك)
-        if (newLeft < 0) newLeft = 0;
-        if (newTop < 0) newTop = 0;
-        if (newLeft + elRect.width > containerRect.width) newLeft = containerRect.width - elRect.width;
-        if (newTop + elRect.height > containerRect.height) newTop = containerRect.height - elRect.height;
-
-        el.style.left = newLeft + "px";
-        el.style.top = newTop + "px";
-        el.style.transform = ""; // لإلغاء translateX وسطية
-        e.preventDefault();
-      }
-
-      function onPointerUp() {
-        dragging = false;
-        el.style.cursor = "grab";
-      }
-
-      el.addEventListener("mousedown", onPointerDown);
-      el.addEventListener("touchstart", onPointerDown);
-      window.addEventListener("mousemove", onPointerMove);
-      window.addEventListener("touchmove", onPointerMove);
-      window.addEventListener("mouseup", onPointerUp);
-      window.addEventListener("touchend", onPointerUp);
-    }
-
-    makeDraggable(userGroup);
-
-    // تحميل الصورة النهائية
+    // تحميل التهنئة كصورة
     function downloadCard() {
       html2canvas(cardContainer, {backgroundColor: null}).then(canvas => {
         const link = document.createElement("a");
@@ -250,19 +176,134 @@
       });
     }
 
-    // نجوم متلألئة في الخلفية
-    function generateStars() {
-      const stars = document.getElementById("stars");
-      for (let i = 0; i < 50; i++) {
-        const star = document.createElement("div");
-        star.classList.add("star");
-        star.style.left = Math.random() * 100 + "%";
-        star.style.top = Math.random() * 100 + "%";
-        star.style.animationDelay = (Math.random() * 3) + "s";
-        stars.appendChild(star);
+    // المتغيرات لحفظ حالة السحب والتكبير
+    let dragging = false;
+    let startX, startY;
+    let currentX = null;
+    let currentY = null;
+
+    // حالة التكبير (zoom)
+    let currentScale = 1;
+    let initialDistance = null;
+
+    // التعامل مع السحب واللمس
+    userGroup.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      if (e.pointerType === "touch") {
+        if (e.isPrimary) {
+          dragging = true;
+          startX = e.clientX - (currentX || 0);
+          startY = e.clientY - (currentY || 0);
+          userGroup.setPointerCapture(e.pointerId);
+        }
+      } else {
+        dragging = true;
+        startX = e.clientX - (currentX || 0);
+        startY = e.clientY - (currentY || 0);
+        userGroup.setPointerCapture(e.pointerId);
+      }
+    });
+
+    userGroup.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      if (e.pointerType === "touch") {
+        if (e.isPrimary) {
+          currentX = e.clientX - startX;
+          currentY = e.clientY - startY;
+          updateTransform();
+        }
+      } else {
+        currentX = e.clientX - startX;
+        currentY = e.clientY - startY;
+        updateTransform();
+      }
+    });
+
+    userGroup.addEventListener("pointerup", (e) => {
+      dragging = false;
+      userGroup.releasePointerCapture(e.pointerId);
+    });
+
+    userGroup.addEventListener("pointercancel", (e) => {
+      dragging = false;
+      userGroup.releasePointerCapture(e.pointerId);
+    });
+
+    // دعم التكبير باستخدام اللمس (pinch zoom)
+    let ongoingTouches = [];
+
+    cardContainer.addEventListener("touchstart", handleTouchStart, {passive:false});
+    cardContainer.addEventListener("touchmove", handleTouchMove, {passive:false});
+    cardContainer.addEventListener("touchend", handleTouchEnd);
+    cardContainer.addEventListener("touchcancel", handleTouchEnd);
+
+    function handleTouchStart(evt) {
+      if (evt.target !== userGroup && !userGroup.contains(evt.target)) return;
+      for (let i=0; i<evt.changedTouches.length; i++) {
+        ongoingTouches.push(copyTouch(evt.changedTouches[i]));
+      }
+      if (ongoingTouches.length === 2) {
+        initialDistance = distanceBetweenTouches(ongoingTouches[0], ongoingTouches[1]);
       }
     }
-    generateStars();
+
+    function handleTouchMove(evt) {
+      if (evt.target !== userGroup && !userGroup.contains(evt.target)) return;
+      if (ongoingTouches.length === 2 && evt.touches.length === 2) {
+        evt.preventDefault();
+        let newTouches = [evt.touches[0], evt.touches[1]];
+        let newDist = distanceBetweenTouches(newTouches[0], newTouches[1]);
+        let scaleChange = newDist / initialDistance;
+        let newScale = currentScale * scaleChange;
+
+        // حدود للتكبير والتصغير
+        if (newScale < 0.5) newScale = 0.5;
+        if (newScale > 3) newScale = 3;
+
+        userGroup.style.transform = `translate(${currentX||0}px, ${currentY||0}px) scale(${newScale})`;
+      }
+    }
+
+    function handleTouchEnd(evt) {
+      for (let i=0; i<evt.changedTouches.length; i++) {
+        let idx = ongoingTouchIndexById(evt.changedTouches[i].identifier);
+        if (idx >= 0) {
+          ongoingTouches.splice(idx, 1);
+        }
+      }
+      if (ongoingTouches.length < 2 && initialDistance !== null) {
+        // تثبيت المقياس الجديد بعد انتهاء الpinch
+        let transform = userGroup.style.transform;
+        let match = transform.match(/scale\(([^)]+)\)/);
+        if (match) {
+          currentScale = parseFloat(match[1]);
+        }
+        initialDistance = null;
+      }
+    }
+
+    function copyTouch(touch) {
+      return { identifier: touch.identifier, clientX: touch.clientX, clientY: touch.clientY };
+    }
+
+    function ongoingTouchIndexById(idToFind) {
+      for (let i = 0; i < ongoingTouches.length; i++) {
+        let id = ongoingTouches[i].identifier;
+        if (id == idToFind) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function distanceBetweenTouches(touch1, touch2) {
+      return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+    }
+
+    // تحديث التحويل بناءً على currentX, currentY, currentScale
+    function updateTransform() {
+      userGroup.style.transform = `translate(${currentX || 0}px, ${currentY || 0}px) scale(${currentScale})`;
+    }
   </script>
 </body>
 </html>
